@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/integration
+		http://www.springframework.org/schema/integration/spring-integration.xsd">
+
+	<int:gateway id="gateway" default-request-channel="requestChannel"
+		service-interface="org.frenchman.gateway.service.SimpleSyncGateway" />
+
+	<int:chain input-channel="requestChannel" output-channel="failingServiceChannel">
+		<int:filter expression="payload.equalsIgnoreCase('Bogusia')"
+				throw-exception-on-rejection="true" discard-channel="rejected" />
+		<int:service-activator>
+			<bean class="org.frenchman.gateway.service.WaitingService" />
+		</int:service-activator>
+	</int:chain>
+
+	<int:logging-channel-adapter id="rejected" level="WARN"/>
+
+	<int:service-activator id="failingServiceActivator"
+			input-channel="failingServiceChannel">
+		<bean class="org.frenchman.gateway.service.FailingService" />
+	</int:service-activator>
+
+	<int:channel id="failingServiceChannel" />
+	<int:channel id="requestChannel" />
+</beans>
